@@ -1,33 +1,47 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import openpyxl
+import wget
+import time
 
 # Загрузка веб-страницы
 url = "https://www.rpachallenge.com/"  # Замените на URL нужной вам страницы
 driver = webdriver.Chrome()  # Используйте свой WebDriver (например, Chrome, Firefox, Safari)
 driver.get(url)
 
+
+# wget.download('https://www.rpachallenge.com/assets/downloadFiles/challenge.xlsx')
+
 # Открываем файл Excel
 workbook = openpyxl.load_workbook('challenge.xlsx')
 sheet = workbook.active
 
 
+xpath_expression = f"//button[text() = 'Start']"
+start_element = driver.find_element(By.XPATH, xpath_expression)
+start_element.click()
+
+first_row_processed = False
+
 for row in sheet.iter_rows(values_only=True):
+	if not first_row_processed:
+		first_row_processed = True
+		continue
+
 	# Помимо данных текущей строки всегда забираем с собой заголовки таблицы.
 	form_data = dict(zip([i.value for i in sheet[1]], row))
-	# print("form_data: ", form_data)
-	# print("form_data.items(): ", form_data.items())
 
 	# Вводим все данные в нужные поля формы.
 	for field_name, field_value in form_data.items():
-		# Определяем label, к которому будем клеить значение.
-		label_text = field_name
+		# Определяем label, удаляя начальные и конечные пробелы.
+		label_text = field_name.strip()
 		# Используем XPath для нахождения input по тексту label
 		xpath_expression = f"//label[text()='{label_text}']/following-sibling::input"
 		input_element = driver.find_element(By.XPATH, xpath_expression)
 
 		input_element.send_keys(str(field_value))
 
+	# time.sleep(0.1)
 	# Отправить форму
 	submit_button = driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
 	submit_button.click()
