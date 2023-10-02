@@ -1,16 +1,29 @@
+import sys
+
+import requests as requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import openpyxl
-import wget
-import time
+
 
 # Загрузка веб-страницы
-url = "https://www.rpachallenge.com/"  # Замените на URL нужной вам страницы
-driver = webdriver.Chrome()  # Используйте свой WebDriver (например, Chrome, Firefox, Safari)
+url = "https://www.rpachallenge.com/"  # URL страницы, с которой мы будем работать.
+driver = webdriver.Chrome()  # Используем Selenium WebDriver (например, Chrome, Firefox, Safari)
 driver.get(url)
 
 
-# wget.download('https://www.rpachallenge.com/assets/downloadFiles/challenge.xlsx')
+try:
+	print("Скачиваем таблицу с исходными данными...")
+	response = requests.get("https://www.rpachallenge.com/assets/downloadFiles/challenge.xlsx")
+	print("\033[42mСкачивание успешно завершено\033[0m")
+	if len(sys.argv) >= 2:
+		file = open(str(sys.argv[1]) + "challenge.xlsx", "wb")
+		file.write(response.content)
+except requests.exceptions.RequestException:
+	print("Ошибка при получении файла с сервера: ", Exception)
+except Exception:
+	print(Exception)
+
 
 # Открываем файл Excel
 workbook = openpyxl.load_workbook('challenge.xlsx')
