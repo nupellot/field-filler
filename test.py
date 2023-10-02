@@ -22,25 +22,23 @@ try:
     print("\033[42mСкачивание успешно завершено\033[0m")
 
     # Обработка необязательных параметров.
-    if TABLE_DIRECTORY:  # Если указан адрес сохранения таблицы.
-        TABLE_PATH = TABLE_DIRECTORY + TABLE_NAME
-    else:  # Если не указан адрес сохранения таблицы, используем стандартный.
-        TABLE_PATH = TABLE_DIRECTORY + TABLE_NAME
-    file = open(TABLE_PATH, "wb")
+    file = open(TABLE_DIRECTORY + TABLE_NAME, "wb")
     file.write(response.content)  # Записываем данные в файл.
     file.close()
-    sheet = pandas.read_excel(TABLE_PATH)  # Читаем все данные из таблицы.
+    sheet = pandas.read_excel(TABLE_DIRECTORY + TABLE_NAME)  # Читаем все данные из таблицы.
 
 except requests.exceptions.RequestException:
+    # В случае неудачи при скачивании таблицы используем нашу оффлайн-версию.
     print("Ошибка при получении файла с сервера: ", Exception)
     print("Используем заготовленную заранее копию.")
-    sheet = pandas.read_excel(TABLE_NAME)
+    sheet = pandas.read_excel(DEFAULT_DIRECTORY + TABLE_NAME)
 
 # Нажимаем на кнопку "Старт".
 xpath_expression = f"//button[text() = 'Start']"
 start_element = driver.find_element(By.XPATH, xpath_expression)
 start_element.click()
 
+# Заполняем формы.
 for row in sheet.iloc():  # Итерируемся по строкам.
     for field_name, field_value in row.items():  # Итерируемся по всем объектам в строке.
         # Определяем label, удаляя начальные и конечные пробелы.
@@ -55,6 +53,10 @@ for row in sheet.iloc():  # Итерируемся по строкам.
     # Отправляем форму
     submit_button = driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
     submit_button.click()
+
+# Сохраняем скриншот в случае успеха.
+if driver.find_element(By.XPATH, "//div[text()[contains(.,'Congratulations!')]]"):
+    driver.save_screenshot("Congratulations.png")
 
 # Условие для контроля закрытия браузера
 close_browser = input("Нажмите Enter, чтобы закрыть браузер...")
